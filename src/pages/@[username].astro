@@ -5,18 +5,18 @@ import Header from '../components/Header.astro';
 import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 
 const { username } = Astro.params;
-const cleanUsername = username.replace(/^@/, '').toLowerCase();
+const cleanUsername = username.toLowerCase();
 
-// Fetch data dari Worker Next.js loe (ganti URL kalau beda)
+// Fetch data dari Worker Next.js (ganti URL kalau Worker loe beda)
 const res = await fetch(`https://profile.soeparnocorp.workers.dev/api/profile/${cleanUsername}`);
 const profile = await res.json();
 
 if (!profile || !profile.name) {
-  // Kalau profile nggak ada, redirect ke 404 atau tampil pesan
+  // Redirect ke 404 kalau profile nggak ditemukan
   return Astro.redirect('/404');
 }
 
-// Meta SEO & share (biar index Google & share bagus di X/FB)
+// Meta SEO & share (Google, OG, Twitter)
 const title = `@${cleanUsername} | ${SITE_TITLE}`;
 const description = profile.bio || 'Profile card personal ala Linktree';
 const ogImage = profile.avatar_url || '/default-avatar.png';  // tambah default image di public/
@@ -30,7 +30,7 @@ const ogImage = profile.avatar_url || '/default-avatar.png';  // tambah default 
         <meta property="og:title" content={title} />
         <meta property="og:description" content={description} />
         <meta property="og:image" content={ogImage} />
-        <meta property="og:url" content={`https://readtalk.pages.dev/@${cleanUsername}`} />
+        <meta property="og:url" content={`https://readtalk.pages.dev/${username}`} />
         <meta property="og:type" content="profile" />
         <meta name="twitter:card" content="summary_large_image" />
     </head>
@@ -48,7 +48,7 @@ const ogImage = profile.avatar_url || '/default-avatar.png';  // tambah default 
             )}
 
             <h1 class="text-5xl md:text-7xl font-bold mb-4">@{cleanUsername}</h1>
-            <p class="text-3xl md:text-5xl mb-8">{profile.name}</p>
+            <p class="text-3xl md:text-4xl mb-8">{profile.name}</p>
 
             {profile.bio && (
                 <p class="text-xl md:text-2xl max-w-3xl text-center mb-12 opacity-90">{profile.bio}</p>
@@ -68,7 +68,7 @@ const ogImage = profile.avatar_url || '/default-avatar.png';  // tambah default 
             </div>
 
             <p class="mt-16 text-sm opacity-60 text-center">
-                Dibuat dengan READTalk Messenger • Share link ini ke mana aja!
+                Dibuat dengan READTalk Messenger • Share link ini!
             </p>
         </main>
 
