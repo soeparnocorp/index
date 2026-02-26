@@ -1,11 +1,11 @@
 ---
-import Layout from '../layouts/BlogPost.astro';  // atau nama layout loe (BlogPost.astro dari about.astro)
-import DefaultHero from '../assets/blog-placeholder-about.jpg';  // default hero kalau nggak ada avatar
+import Layout from '../layouts/BlogPost.astro';  // layout yang sama dipake di about.astro
+import DefaultHero from '../assets/blog-placeholder-about.jpg';  // fallback kalau avatar nggak ada
 
 const { username } = Astro.params;
 const cleanUsername = username.replace(/^@/, '').toLowerCase();
 
-// Fetch data dari Worker Next.js loe
+// Fetch data dari Worker Next.js loe (ganti kalau Worker URL beda)
 const res = await fetch(`https://profile.soeparnocorp.workers.dev/api/profile/${cleanUsername}`);
 const profile = await res.json();
 
@@ -13,10 +13,10 @@ if (!profile || !profile.name) {
   return Astro.redirect('/404');
 }
 
-// Hero image prioritas avatar dari form, fallback ke default
+// Hero image prioritas avatar dari form
 const heroImage = profile.avatar_url || DefaultHero;
 
-// Meta dinamis (biar SEO & share bagus)
+// Meta dinamis
 const title = `@${cleanUsername} | READTalk Messenger`;
 const description = profile.bio || 'Profile card personal ala Linktree';
 ---
@@ -27,28 +27,36 @@ const description = profile.bio || 'Profile card personal ala Linktree';
   pubDate={new Date(profile.updated_at || new Date())}
   heroImage={heroImage}
 >
-  <div class="text-center">
-    <h1 class="text-5xl md:text-7xl font-bold mb-4">@{cleanUsername}</h1>
-    <p class="text-3xl md:text-5xl mb-8">{profile.name}</p>
+  <div class="text-center max-w-4xl mx-auto">
+    <h1 class="text-5xl md:text-7xl font-bold mb-6">@{cleanUsername}</h1>
+    <p class="text-3xl md:text-5xl mb-10">{profile.name}</p>
 
     {profile.bio && (
-      <p class="text-xl md:text-2xl max-w-3xl mx-auto mb-12 opacity-90">{profile.bio}</p>
+      <p class="text-xl md:text-2xl mb-12 opacity-90 leading-relaxed">
+        {profile.bio}
+      </p>
     )}
 
-    <div class="max-w-md mx-auto space-y-5">
-      {profile.links?.map(link => (
-        <a
-          href={link.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          class="block bg-gray-800/60 hover:bg-gray-700/80 py-5 rounded-xl text-center text-lg font-medium transition backdrop-blur-sm"
-        >
-          {link.label}
-        </a>
-      ))}
+    <div class="space-y-6 mt-12">
+      <h2 class="text-2xl font-semibold mb-6">Links Sosmed / Website</h2>
+
+      {profile.links?.length > 0 ? (
+        profile.links.map(link => (
+          <a
+            href={link.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="block bg-gray-800/60 hover:bg-gray-700/80 py-5 px-8 rounded-xl text-center text-lg font-medium transition backdrop-blur-sm border border-gray-700"
+          >
+            {link.label}
+          </a>
+        ))
+      ) : (
+        <p class="text-gray-500 italic">Belum ada link ditambahkan.</p>
+      )}
     </div>
 
-    <p class="mt-16 text-sm opacity-60">
+    <p class="mt-20 text-sm opacity-60">
       Dibuat dengan READTalk Messenger • Share link ini ke mana aja!
     </p>
   </div>
