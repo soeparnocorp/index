@@ -1,77 +1,55 @@
 ---
-import BaseHead from '../components/BaseHead.astro';
-import Footer from '../components/Footer.astro';
-import Header from '../components/Header.astro';
-import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
+import Layout from '../layouts/BlogPost.astro';  // atau nama layout loe (BlogPost.astro dari about.astro)
+import DefaultHero from '../assets/blog-placeholder-about.jpg';  // default hero kalau nggak ada avatar
 
 const { username } = Astro.params;
 const cleanUsername = username.replace(/^@/, '').toLowerCase();
 
-// Fetch data dari Worker Next.js loe (ganti URL kalau beda)
+// Fetch data dari Worker Next.js loe
 const res = await fetch(`https://profile.soeparnocorp.workers.dev/api/profile/${cleanUsername}`);
 const profile = await res.json();
 
 if (!profile || !profile.name) {
-  // Kalau profile nggak ada, redirect ke 404 atau tampil pesan
   return Astro.redirect('/404');
 }
 
-// Meta SEO & share (biar index Google & share bagus di X/FB)
-const title = `@${cleanUsername} | ${SITE_TITLE}`;
+// Hero image prioritas avatar dari form, fallback ke default
+const heroImage = profile.avatar_url || DefaultHero;
+
+// Meta dinamis (biar SEO & share bagus)
+const title = `@${cleanUsername} | READTalk Messenger`;
 const description = profile.bio || 'Profile card personal ala Linktree';
-const ogImage = profile.avatar_url || '/default-avatar.png';  // tambah default image di public/
 ---
 
-<!doctype html>
-<html lang="id">
-    <head>
-        <BaseHead title={title} description={description} />
-        <meta name="robots" content="index, follow" />
-        <meta property="og:title" content={title} />
-        <meta property="og:description" content={description} />
-        <meta property="og:image" content={ogImage} />
-        <meta property="og:url" content={`https://readtalk.pages.dev/@${cleanUsername}`} />
-        <meta property="og:type" content="profile" />
-        <meta name="twitter:card" content="summary_large_image" />
-    </head>
-    <body class="bg-black text-white min-h-screen flex flex-col">
-        <Header />
+<Layout
+  title={title}
+  description={description}
+  pubDate={new Date(profile.updated_at || new Date())}
+  heroImage={heroImage}
+>
+  <div class="text-center">
+    <h1 class="text-5xl md:text-7xl font-bold mb-4">@{cleanUsername}</h1>
+    <p class="text-3xl md:text-5xl mb-8">{profile.name}</p>
 
-        <main class="flex-1 flex flex-col items-center py-16 px-6">
-            <!-- Avatar -->
-            {profile.avatar_url ? (
-                <img src={profile.avatar_url} alt={profile.name} class="w-32 h-32 md:w-48 md:h-48 rounded-full border-4 border-indigo-500 shadow-2xl mb-6 object-cover" />
-            ) : (
-                <div class="w-32 h-32 md:w-48 md:h-48 bg-indigo-600 rounded-full flex items-center justify-center text-6xl md:text-8xl font-bold mb-6 shadow-2xl">
-                    {cleanUsername[0].toUpperCase()}
-                </div>
-            )}
+    {profile.bio && (
+      <p class="text-xl md:text-2xl max-w-3xl mx-auto mb-12 opacity-90">{profile.bio}</p>
+    )}
 
-            <h1 class="text-5xl md:text-7xl font-bold mb-4">@{cleanUsername}</h1>
-            <p class="text-3xl md:text-5xl mb-8">{profile.name}</p>
+    <div class="max-w-md mx-auto space-y-5">
+      {profile.links?.map(link => (
+        <a
+          href={link.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="block bg-gray-800/60 hover:bg-gray-700/80 py-5 rounded-xl text-center text-lg font-medium transition backdrop-blur-sm"
+        >
+          {link.label}
+        </a>
+      ))}
+    </div>
 
-            {profile.bio && (
-                <p class="text-xl md:text-2xl max-w-3xl text-center mb-12 opacity-90">{profile.bio}</p>
-            )}
-
-            <div class="w-full max-w-md space-y-5">
-                {profile.links?.map(link => (
-                    <a
-                        href={link.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        class="block bg-gray-800/60 hover:bg-gray-700/80 py-5 rounded-xl text-center text-lg font-medium transition backdrop-blur-sm"
-                    >
-                        {link.label}
-                    </a>
-                ))}
-            </div>
-
-            <p class="mt-16 text-sm opacity-60 text-center">
-                Dibuat dengan READTalk Messenger • Share link ini ke mana aja!
-            </p>
-        </main>
-
-        <Footer />
-    </body>
-</html>
+    <p class="mt-16 text-sm opacity-60">
+      Dibuat dengan READTalk Messenger • Share link ini ke mana aja!
+    </p>
+  </div>
+</Layout>
