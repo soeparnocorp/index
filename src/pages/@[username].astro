@@ -4,41 +4,54 @@ import Footer from '../components/Footer.astro';
 import Header from '../components/Header.astro';
 
 export function getStaticPaths() {
-  // Dulu hardcode usernames yang aktif (tambah manual atau dari JSON/KV nanti)
   return [
     { params: { username: 'SoeparnoCorp' } },
-    // { params: { username: 'contoh-lain' } },
+    // Tambah username lain nanti
   ];
 }
 
 const { username } = Astro.params;
 
-// Data profile contoh (nanti ambil dari JSON, KV, atau DB kalau SSR)
+// Data profile (bisa dari file JSON nanti kalau banyak user)
 const profiles = {
   SoeparnoCorp: {
     name: 'Soeparno Enterprise',
-    bio: 'Entrepreneur | Builder | READTalk Messenger',
-    avatar: '/avatar-placeholder.png', // upload ke public/
+    bio: 'Entrepreneur | Builder | READTalk Messenger. Building Indonesia\'s next big thing one step at a time.',
+    avatar: '/avatar-soeparno.jpg', // Upload gambar ke public/ kalau ada
     links: [
-      { label: 'Follow on X', url: 'https://x.com/SoeparnoCorp' },
-      { label: 'LinkedIn', url: 'https://linkedin.com/in/soeparno' },
-      { label: 'Join Inner Circle (Form)', url: 'https://readtalk-form.youraccount.workers.dev' },
-      // tambah link lain
+      {
+        label: 'Follow on X',
+        url: 'https://x.com/SoeparnoCorp',
+        icon: 'x' // optional, bisa tambah class icon nanti
+      },
+      {
+        label: 'LinkedIn Profile',
+        url: 'https://www.linkedin.com/in/soeparno-enterprise' // ganti kalau ada
+      },
+      {
+        label: 'Portfolio / Projects',
+        url: 'https://portfolio-soeparno.pages.dev' // atau link lain
+      },
+      {
+        label: 'Join Inner Circle (Newsletter/Waitlist)',
+        url: 'https://readtalk-form-handler.<your-account>.workers.dev', // ← ini link ke Worker loe!
+        highlight: true // optional: bikin tombol ini beda warna
+      },
+      // Tambah link lain sesuka hati
     ]
   }
 };
 
-const profile = profiles[username] || null;
+const profile = profiles[username.toLowerCase()] || null;
 
-if (!profile) {
-  return Astro.redirect('/404'); // atau tampilkan pesan "User not found"
-}
+if (!profile) return Astro.redirect('/404');
 ---
 
 <!doctype html>
 <html lang="id">
   <head>
     <BaseHead title={`@${username} | ${profile.name}`} description={profile.bio} />
+    <!-- Tambah Tailwind kalau udah install, atau style manual -->
   </head>
   <body class="bg-black text-white min-h-screen flex flex-col items-center px-6 py-16">
     <Header />
@@ -53,15 +66,22 @@ if (!profile) {
       </div>
 
       <h1 class="text-5xl font-bold mb-2">@{username}</h1>
-      <p class="text-2xl mb-8 opacity-90">{profile.name}</p>
+      <p class="text-2xl mb-4">{profile.name}</p>
       <p class="text-lg mb-12 opacity-80">{profile.bio}</p>
 
+      <!-- Links / Buttons -->
       <div class="space-y-4 w-full">
         {profile.links.map(link => (
           <a 
-            href={link.url} 
-            target="_blank" 
-            class="block bg-gray-800/60 hover:bg-gray-700/80 py-5 rounded-xl text-lg font-medium transition backdrop-blur-sm"
+            href={link.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            class:list={[
+              "block py-5 rounded-xl text-lg font-medium transition backdrop-blur-sm",
+              link.highlight 
+                ? "bg-indigo-600 hover:bg-indigo-700 shadow-lg" 
+                : "bg-gray-800/60 hover:bg-gray-700/80"
+            ]}
           >
             {link.label}
           </a>
