@@ -2,93 +2,76 @@
 import BaseHead from '../components/BaseHead.astro';
 import Footer from '../components/Footer.astro';
 import Header from '../components/Header.astro';
-
-export function getStaticPaths() {
-  return [
-    { params: { username: 'SoeparnoCorp' } },
-    // Tambah username lain nanti
-  ];
-}
+import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 
 const { username } = Astro.params;
+const cleanUsername = username.toLowerCase();
 
-// Data profile (bisa dari file JSON nanti kalau banyak user)
-const profiles = {
-  SoeparnoCorp: {
-    name: 'Soeparno Enterprise',
-    bio: 'Entrepreneur | Builder | READTalk Messenger. Building Indonesia\'s next big thing one step at a time.',
-    avatar: '/avatar-soeparno.jpg', // Upload gambar ke public/ kalau ada
-    links: [
-      {
-        label: 'Follow on X',
-        url: 'https://x.com/SoeparnoCorp',
-        icon: 'x' // optional, bisa tambah class icon nanti
-      },
-      {
-        label: 'LinkedIn Profile',
-        url: 'https://www.linkedin.com/in/soeparno-enterprise' // ganti kalau ada
-      },
-      {
-        label: 'Portfolio / Projects',
-        url: 'https://portfolio-soeparno.pages.dev' // atau link lain
-      },
-      {
-        label: 'Join Inner Circle (Newsletter/Waitlist)',
-        url: 'https://me.soeparnocorp.workers.dev', // ← ini link ke Worker loe!
-        highlight: true // optional: bikin tombol ini beda warna
-      },
-      // Tambah link lain sesuka hati
-    ]
-  }
-};
+// Fetch data dari Worker Next.js (ganti URL kalau Worker loe beda)
+const res = await fetch(`https://profile.soeparnocorp.workers.dev/api/profile/${cleanUsername}`);
+const profile = await res.json();
 
-const profile = profiles[username.toLowerCase()] || null;
+if (!profile || !profile.name) {
+  // Redirect ke 404 kalau profile nggak ditemukan
+  return Astro.redirect('/404');
+}
 
-if (!profile) return Astro.redirect('/404');
+// Meta SEO & share (Google, OG, Twitter)
+const title = `@${cleanUsername} | ${SITE_TITLE}`;
+const description = profile.bio || 'Profile card personal ala Linktree';
+const ogImage = profile.avatar_url || '/default-avatar.png';  // tambah default image di public/
 ---
 
 <!doctype html>
 <html lang="id">
-  <head>
-    <BaseHead title={`@${username} | ${profile.name}`} description={profile.bio} />
-    <!-- Tambah Tailwind kalau udah install, atau style manual -->
-  </head>
-  <body class="bg-black text-white min-h-screen flex flex-col items-center px-6 py-16">
-    <Header />
+    <head>
+        <BaseHead title={title} description={description} />
+        <meta name="robots" content="index, follow" />
+        <meta property="og:title" content={title} />
+        <meta property="og:description" content={description} />
+        <meta property="og:image" content={ogImage} />
+        <meta property="og:url" content={`https://readtalk.pages.dev/${username}`} />
+        <meta property="og:type" content="profile" />
+        <meta name="twitter:card" content="summary_large_image" />
+    </head>
+    <body class="bg-black text-white min-h-screen flex flex-col">
+        <Header />
 
-    <main class="max-w-md w-full text-center">
-      <!-- Avatar -->
-      <div class="w-32 h-32 mx-auto mb-6 rounded-full overflow-hidden border-4 border-indigo-500 shadow-2xl">
-        <!-- <img src={profile.avatar} alt={`@${username}`} class="w-full h-full object-cover" /> -->
-        <div class="w-full h-full bg-indigo-600 flex items-center justify-center text-6xl font-bold">
-          {username[0].toUpperCase()}
-        </div>
-      </div>
+        <main class="flex-1 flex flex-col items-center py-16 px-6">
+            <!-- Avatar -->
+            {profile.avatar_url ? (
+                <img src={profile.avatar_url} alt={profile.name} class="w-32 h-32 md:w-48 md:h-48 rounded-full border-4 border-indigo-500 shadow-2xl mb-6 object-cover" />
+            ) : (
+                <div class="w-32 h-32 md:w-48 md:h-48 bg-indigo-600 rounded-full flex items-center justify-center text-6xl md:text-8xl font-bold mb-6 shadow-2xl">
+                    {cleanUsername[0].toUpperCase()}
+                </div>
+            )}
 
-      <h1 class="text-5xl font-bold mb-2">@{username}</h1>
-      <p class="text-2xl mb-4">{profile.name}</p>
-      <p class="text-lg mb-12 opacity-80">{profile.bio}</p>
+            <h1 class="text-5xl md:text-7xl font-bold mb-4">@{cleanUsername}</h1>
+            <p class="text-3xl md:text-4xl mb-8">{profile.name}</p>
 
-      <!-- Links / Buttons -->
-      <div class="space-y-4 w-full">
-        {profile.links.map(link => (
-          <a 
-            href={link.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            class:list={[
-              "block py-5 rounded-xl text-lg font-medium transition backdrop-blur-sm",
-              link.highlight 
-                ? "bg-indigo-600 hover:bg-indigo-700 shadow-lg" 
-                : "bg-gray-800/60 hover:bg-gray-700/80"
-            ]}
-          >
-            {link.label}
-          </a>
-        ))}
-      </div>
-    </main>
+            {profile.bio && (
+                <p class="text-xl md:text-2xl max-w-3xl text-center mb-12 opacity-90">{profile.bio}</p>
+            )}
 
-    <Footer class="mt-auto py-8 text-sm opacity-60" />
-  </body>
+            <div class="w-full max-w-md space-y-5">
+                {profile.links?.map(link => (
+                    <a
+                        href={link.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="block bg-gray-800/60 hover:bg-gray-700/80 py-5 rounded-xl text-center text-lg font-medium transition backdrop-blur-sm"
+                    >
+                        {link.label}
+                    </a>
+                ))}
+            </div>
+
+            <p class="mt-16 text-sm opacity-60 text-center">
+                Dibuat dengan READTalk Messenger • Share link ini!
+            </p>
+        </main>
+
+        <Footer />
+    </body>
 </html>
