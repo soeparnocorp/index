@@ -1,0 +1,74 @@
+---
+import BaseHead from '../components/BaseHead.astro';
+import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
+
+export function getStaticPaths() {
+  // Dulu hardcode usernames yang aktif (tambah manual atau dari JSON/KV nanti)
+  return [
+    { params: { username: 'SoeparnoCorp' } },
+    // { params: { username: 'contoh-lain' } },
+  ];
+}
+
+const { username } = Astro.params;
+
+// Data profile contoh (nanti ambil dari JSON, KV, atau DB kalau SSR)
+const profiles = {
+  SoeparnoCorp: {
+    name: 'Soeparno Enterprise',
+    bio: 'Entrepreneur | Builder | READTalk Messenger',
+    avatar: '/avatar-placeholder.png', // upload ke public/
+    links: [
+      { label: 'Follow on X', url: 'https://x.com/SoeparnoCorp' },
+      { label: 'LinkedIn', url: 'https://linkedin.com/in/soeparno' },
+      { label: 'Join Inner Circle (Form)', url: 'https://readtalk-form.youraccount.workers.dev' },
+      // tambah link lain
+    ]
+  }
+};
+
+const profile = profiles[username] || null;
+
+if (!profile) {
+  return Astro.redirect('/404'); // atau tampilkan pesan "User not found"
+}
+---
+
+<!doctype html>
+<html lang="id">
+  <head>
+    <BaseHead title={`@${username} | ${profile.name}`} description={profile.bio} />
+  </head>
+  <body class="bg-black text-white min-h-screen flex flex-col items-center px-6 py-16">
+    <Header />
+
+    <main class="max-w-md w-full text-center">
+      <!-- Avatar -->
+      <div class="w-32 h-32 mx-auto mb-6 rounded-full overflow-hidden border-4 border-indigo-500 shadow-2xl">
+        <!-- <img src={profile.avatar} alt={`@${username}`} class="w-full h-full object-cover" /> -->
+        <div class="w-full h-full bg-indigo-600 flex items-center justify-center text-6xl font-bold">
+          {username[0].toUpperCase()}
+        </div>
+      </div>
+
+      <h1 class="text-5xl font-bold mb-2">@{username}</h1>
+      <p class="text-2xl mb-8 opacity-90">{profile.name}</p>
+      <p class="text-lg mb-12 opacity-80">{profile.bio}</p>
+
+      <div class="space-y-4 w-full">
+        {profile.links.map(link => (
+          <a 
+            href={link.url} 
+            target="_blank" 
+            class="block bg-gray-800/60 hover:bg-gray-700/80 py-5 rounded-xl text-lg font-medium transition backdrop-blur-sm"
+          >
+            {link.label}
+          </a>
+        ))}
+      </div>
+    </main>
+
+    <Footer class="mt-auto py-8 text-sm opacity-60" />
+  </body>
+</html>
